@@ -14,3 +14,9 @@ d0x provides a markup version of
 
 dox provides a mechanism for documenting your patches using markdown instead of
 plain text -- a nice alternative to the Core Notes module.
+
+--
+
+**Licenses**
+
+All concepts and source code in this repository is licensed under [BSD-3-Clause](LICENSE) by Dirk Leas.
