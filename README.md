@@ -1,6 +1,8 @@
 
 # DLWigglz plugin
 
+### *NOTICE: this plugin is on hold as of VCV Rack v0.6.x -- check back for future VCV Rack releases.*
+
 DLWigglz provides a range of experimental, stack-level extensions to VCV Rack that
 are workflow enhancements.
 
