@@ -7,8 +7,8 @@ using namespace rack;
 #include "osdialog.h"
 #include "unistd.h"
 #include "window.hpp"
-#include <chrono>
-#include <thread>
+// #include <chrono>
+// #include <thread>
 
 struct R4xH4x: Module {
 	enum ParamIds {
@@ -42,10 +42,10 @@ struct R4xH4x: Module {
 };
 
 void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as catalog.json
-	int clear = 0; // periodically clear rendered moduleWidgets
-	std::vector<ModuleWidget*> moduleWidgets; // cache for width lookup
+	// int clear = 0; // periodically clear rendered moduleWidgets
+	// std::vector<ModuleWidget*> moduleWidgets; // cache for width lookup
 	Vec windowSize = windowGetWindowSize(); // initial, no callback
-	info("Generating catalog for installed plugin models");
+	info("Generating partial catalog for installed plugin models (missing module widths)");
 	json_t *metaj = json_object(); // meta as json, plugins as json, etc
 	json_t *psj = json_array();
 	json_object_set_new(metaj, "applicationName", json_string(gApplicationName.c_str()));
@@ -66,7 +66,7 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 		json_t *msj = json_array();
 		json_object_set_new(pj, "models", msj);
 		for (Model *model : plugin->models) {
-			info("*** plugin module %d, %s from %s ***", clear++, model->slug.c_str(), plugin->slug.c_str());
+			// info("*** plugin module %d, %s from %s ***", clear++, model->slug.c_str(), plugin->slug.c_str());
 			json_t *mj = json_object();
 			json_object_set_new(mj, "slug", json_string(model->slug.c_str()));
 			json_object_set_new(mj, "name", json_string(model->name.c_str()));
@@ -78,29 +78,28 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 			json_object_set_new(mj, "tags", tsj);
 			// json_object_set_new(mj, "width", json_integer(69)); // stub JIC
 
-			// instantiate ModuleWidgets for width -- segfaulting, thoughts?
-			moduleWidgets.push_back(model->createModuleWidgetNull());
-			json_object_set_new(mj, "width", json_integer((int) moduleWidgets.back()->box.size.x));
+			// // can't instantiate ModuleWidgets outside main Rack thread in 0.6.x!
+			// moduleWidgets.push_back(model->createModuleWidgetNull());
+			// json_object_set_new(mj, "width", json_integer((int) moduleWidgets.back()->box.size.x));
 			json_array_append(msj, mj);
-			if (clear % 10 == 0) {
-				moduleWidgets.clear(); info(" *** cleaning house %d ***", clear);
-				// std::this_thread::sleep_for(std::chrono::seconds(3)); // allow some for things to settle -- h4x!
-			}
+			// if (clear % 10 == 0) {
+			// 	moduleWidgets.clear(); info(" *** cleaning house %d ***", clear);
+			// 	// std::this_thread::sleep_for(std::chrono::seconds(3)); // allow some for things to settle -- h4x!
+			// }
 		}
 		json_array_append(psj, pj);
 	}
 	json_object_set_new(metaj, "plugins", psj);
-	moduleWidgets.clear(); info(" *** cleaning house %d, final ***", clear);
+	// moduleWidgets.clear(); info(" *** cleaning house %d, final ***", clear);
 
 	// std::this_thread::sleep_for(std::chrono::seconds(5)); // allow some for things to settle -- h4x!
-	info("Saving installation plugin/module catalog.json");
-	FILE *file = fopen(assetLocal("catalog.json").c_str(), "w");
+	info("Saving partial catalog as plugins/catalog.partial.json, use rackcli "
+		"--cloud to add widths and generate full catalog.json");
+	FILE *file = fopen(assetLocal("catalog.partial.json").c_str(), "w");
 	if (!file) return;
 	json_dumpf(metaj, file, JSON_INDENT(2) | JSON_REAL_PRECISION(9));
 	json_decref(metaj);
 	fclose(file);
-	// 	osdialog_message(OSDIALOG_INFO, OSDIALOG_OK, "Your plugin module catalog has been saved. Close Rack and re-launch it to use new catalog.");
-	// 	windowClose();
 }
 
 void R4xH4x::patch() { // serialize current patch as patch.json w/ widths
