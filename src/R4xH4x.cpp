@@ -44,7 +44,7 @@ struct R4xH4x: Module {
 void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as catalog.json
 	// int clear = 0; // periodically clear rendered moduleWidgets
 	// std::vector<ModuleWidget*> moduleWidgets; // cache for width lookup
-	Vec windowSize = windowGetWindowSize(); // initial, no callback
+	Vec windowSize = windowGetWindowSize();
 	info("Generating partial catalog for installed plugin models (missing module widths)");
 	json_t *metaj = json_object(); // meta as json, plugins as json, etc
 	json_t *psj = json_array();
@@ -103,6 +103,10 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 
 void R4xH4x::patch() { // serialize current patch as patch.json w/ widths
 	json_t *rootJ = gRackWidget->toJson(); // get patch JSON
+
+	Vec windowSize = windowGetWindowSize();
+	json_object_set_new(rootJ, "width", json_integer(windowSize.x));
+	json_object_set_new(rootJ, "height", json_integer(windowSize.y));
 
 	// last mouse position
 	//   unfortunately will be where patch button was clicked, for reference only
