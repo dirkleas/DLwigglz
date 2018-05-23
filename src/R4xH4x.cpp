@@ -56,7 +56,6 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 	json_object_set_new(metaj, "token", json_string(gToken.c_str()));
 	json_object_set_new(metaj, "path", json_string(getcwd(NULL, 0)));
 	json_object_set_new(metaj, "pluginCount", json_integer(gPlugins.size()));
-	json_object_set_new(metaj, "moduleCount", json_integer(gModules.size()));
 	for (Plugin *plugin : gPlugins) {
 		json_t *pj = json_object();
 		json_object_set_new(pj, "slug", json_string(plugin->slug.c_str()));
@@ -104,6 +103,15 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 
 void R4xH4x::patch() { // serialize current patch as patch.json w/ widths
 	json_t *rootJ = gRackWidget->toJson(); // get patch JSON
+
+	// last mouse position
+	//   unfortunately will be where patch button was clicked, for reference only
+	//   use fork File.Save for real position since we can't assign custom
+	//     keyboard chords to plugin modules
+	json_t *posJ = json_pack("[i, i]",
+		(int) gRackWidget->lastMousePos.x, (int) gRackWidget->lastMousePos.y);
+	json_object_set_new(rootJ, "lastMousePos", posJ);
+
 	std::vector<int> widths; // cache child widths from patch
 	for (Widget *w : gRackWidget->moduleContainer->children) {
 		ModuleWidget *moduleWidget = dynamic_cast<ModuleWidget*>(w);
