@@ -116,16 +116,17 @@ void R4xH4x::patch() { // serialize current patch as patch.json w/ widths
 		(int) gRackWidget->lastMousePos.x, (int) gRackWidget->lastMousePos.y);
 	json_object_set_new(rootJ, "lastMousePos", posJ);
 
-	std::vector<int> widths; // cache child widths from patch
+	std::vector<std::vector<int>> xy; // cache child (width, height) from patch
 	for (Widget *w : gRackWidget->moduleContainer->children) {
 		ModuleWidget *moduleWidget = dynamic_cast<ModuleWidget*>(w);
 		assert(moduleWidget);
-		widths.push_back((int) moduleWidget->box.size.x);
+		xy.push_back({(int) moduleWidget->box.size.x, (int) moduleWidget->box.size.y});
 	}
 	size_t index;
-	json_t *module; // inject missing widths into each module's json
+	json_t *module; // inject missing width/height into each module's json
 	json_array_foreach(json_object_get(rootJ, "modules"), index, module) {
-		json_object_set(module, "width", json_integer(widths.at(index)));
+		json_object_set(module, "width", json_integer(xy.at(index)[0]));
+		json_object_set(module, "height", json_integer(xy.at(index)[1]));
 	}
 	// info("%s", json_dumps(rootJ, JSON_INDENT(2) | JSON_REAL_PRECISION(9)));
 	info("Saving width-augmented patch to patch.json");
