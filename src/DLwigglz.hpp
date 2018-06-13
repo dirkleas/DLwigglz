@@ -15,6 +15,12 @@ struct BigLEDBezel : SVGSwitch, MomentarySwitch {
   }
 };
 
+struct as_PJ301MPort : SVGPort {
+	as_PJ301MPort() {
+		setSVG(SVG::load(assetPlugin(plugin,"res/PJ301M.svg")));
+	}
+};
+
 template <typename BASE>
 struct GiantLight : BASE {
   GiantLight() {

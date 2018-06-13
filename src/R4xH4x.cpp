@@ -17,6 +17,7 @@ struct R4xH4x: Module {
 		NUM_PARAMS
 	};
 	enum InputIds {
+		CV_TRIG_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -30,6 +31,7 @@ struct R4xH4x: Module {
 
 	SchmittTrigger btnTrigger1;
 	SchmittTrigger btnTrigger2;
+	SchmittTrigger extTrigger1;
 
 	const float lightLambda = 0.075f;
 	float resetLight1 = 0.0f;
@@ -153,6 +155,12 @@ void R4xH4x::step() {
 	}
 	resetLight2 -= resetLight2 / lightLambda / engineGetSampleRate();
 	lights[MOMENTARY_LED_2].value = resetLight2;
+
+	// reopen/revert jack, trigger File.Revert/reOpen
+	if (extTrigger1.process(inputs[CV_TRIG_INPUT].value)) {
+		info("Triggering File.Revert/reOpen with CV: +%dv", (int) inputs[CV_TRIG_INPUT].value);
+		// gRackWidget->revert();
+  }
 }
 
 struct R4xH4xWidget : ModuleWidget {
@@ -179,6 +187,9 @@ R4xH4xWidget::R4xH4xWidget(R4xH4x *module) : ModuleWidget(module) {
 	// patch, bottom button
 	addParam(ParamWidget::create<BigLEDBezel>(Vec(led_center, y_base+y_offset), module, R4xH4x::MOMENTARY_SWITCH_2, 0.0, 1.0, 0.0));
 	addChild(ModuleLightWidget::create<GiantLight<RedLight>>(Vec(led_center+led_offset, y_base+led_offset+y_offset), module, R4xH4x::MOMENTARY_LED_2));
+
+	// reopen/revert jack
+	addInput(Port::create<as_PJ301MPort>(Vec(box.size.x / 2 - 12, 350), Port::INPUT, module, R4xH4x::CV_TRIG_INPUT));
 }
 
 Model *modelR4xH4x = Model::create<R4xH4x, R4xH4xWidget>("DLwigglz", "DWLwigglz-r4xH4x", "r4xH4x", UTILITY_TAG);
