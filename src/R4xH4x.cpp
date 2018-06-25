@@ -11,7 +11,7 @@ using namespace rack;
 // #include <thread>
 #include <stdio.h>
 #include <fcntl.h>
-#include <sys/mman.h>
+// #include <sys/mman.h>
 
 struct R4xH4x: Module {
 	enum ParamIds {
