@@ -14,7 +14,7 @@ the current patch as JSON with width data as `patch.json`. Both files are useful
 **Example Usage -- Live Features**). The extra input jack is for testing and does
 nothing interesting (yet).
 
-![DLwigglz r4xH4x](https://user-images.githubusercontent.com/52076/41833055-c6941908-781c-11e8-8305-0a281394ee92.png){: height="50%" width="50%"}
+<img src="https://user-images.githubusercontent.com/52076/41833055-c6941908-781c-11e8-8305-0a281394ee92.png" width="15%" height="15%"></img>
 
 Many thanks to Xavier Belmont for the new r4xH4x panel design!
 
