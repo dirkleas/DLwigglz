@@ -9,6 +9,9 @@ using namespace rack;
 #include "window.hpp"
 // #include <chrono>
 // #include <thread>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 struct R4xH4x: Module {
 	enum ParamIds {
@@ -46,6 +49,8 @@ struct R4xH4x: Module {
 void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as catalog.json
 	// int clear = 0; // periodically clear rendered moduleWidgets
 	// std::vector<ModuleWidget*> moduleWidgets; // cache for width lookup
+	int xpos, ypos;
+	glfwGetWindowPos(gWindow, &xpos, &ypos);
 	Vec windowSize = windowGetWindowSize();
 	info("Generating partial catalog for installed plugin models (missing module widths)");
 	json_t *metaj = json_object(); // meta as json, plugins as json, etc
@@ -53,6 +58,9 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 	json_object_set_new(metaj, "applicationName", json_string(gApplicationName.c_str()));
 	json_object_set_new(metaj, "applicationVersion", json_string(gApplicationVersion.c_str()));
 	json_object_set_new(metaj, "apiHost", json_string(gApiHost.c_str()));
+	json_object_set_new(metaj, "pixelRatio", json_integer(gPixelRatio));
+	json_object_set_new(metaj, "xpos", json_integer(xpos));
+	json_object_set_new(metaj, "ypos", json_integer(ypos));
 	json_object_set_new(metaj, "width", json_integer(windowSize.x));
 	json_object_set_new(metaj, "height", json_integer(windowSize.y));
 	json_object_set_new(metaj, "token", json_string(gToken.c_str()));
@@ -106,7 +114,12 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 void R4xH4x::patch() { // serialize current patch as patch.json w/ widths
 	json_t *rootJ = gRackWidget->toJson(); // get patch JSON
 
+	int xpos, ypos;
+	glfwGetWindowPos(gWindow, &xpos, &ypos);
 	Vec windowSize = windowGetWindowSize();
+	json_object_set_new(rootJ, "pixelRatio", json_integer(gPixelRatio));
+	json_object_set_new(rootJ, "xpos", json_integer(xpos));
+	json_object_set_new(rootJ, "ypos", json_integer(ypos));
 	json_object_set_new(rootJ, "width", json_integer(windowSize.x));
 	json_object_set_new(rootJ, "height", json_integer(windowSize.y));
 
@@ -118,17 +131,24 @@ void R4xH4x::patch() { // serialize current patch as patch.json w/ widths
 		(int) gRackWidget->lastMousePos.x, (int) gRackWidget->lastMousePos.y);
 	json_object_set_new(rootJ, "lastMousePos", posJ);
 
-	std::vector<std::vector<int>> xy; // cache child (width, height) from patch
+	std::vector<std::vector<int>> xypio; // cache child (width, height, params, inputs, outputs) from patch
 	for (Widget *w : gRackWidget->moduleContainer->children) {
 		ModuleWidget *moduleWidget = dynamic_cast<ModuleWidget*>(w);
 		assert(moduleWidget);
-		xy.push_back({(int) moduleWidget->box.size.x, (int) moduleWidget->box.size.y});
+		xypio.push_back({
+			(int) moduleWidget->box.size.x, (int) moduleWidget->box.size.y,
+			(int) moduleWidget->params.size(), (int) moduleWidget->inputs.size(),
+			(int) moduleWidget->outputs.size()
+		});
 	}
 	size_t index;
 	json_t *module; // inject missing width/height into each module's json
 	json_array_foreach(json_object_get(rootJ, "modules"), index, module) {
-		json_object_set(module, "width", json_integer(xy.at(index)[0]));
-		json_object_set(module, "height", json_integer(xy.at(index)[1]));
+		json_object_set(module, "width", json_integer(xypio.at(index)[0]));
+		json_object_set(module, "height", json_integer(xypio.at(index)[1]));
+		json_object_set(module, "paramCount", json_integer(xypio.at(index)[2]));
+		json_object_set(module, "inputCount", json_integer(xypio.at(index)[3]));
+		json_object_set(module, "outputCount", json_integer(xypio.at(index)[4]));
 	}
 	// info("%s", json_dumps(rootJ, JSON_INDENT(2) | JSON_REAL_PRECISION(9)));
 	info("Saving width-augmented patch to patch.json");
@@ -156,10 +176,14 @@ void R4xH4x::step() {
 	resetLight2 -= resetLight2 / lightLambda / engineGetSampleRate();
 	lights[MOMENTARY_LED_2].value = resetLight2;
 
-	// reopen/revert jack, trigger File.Revert/reOpen
+	// h4x jack, whatever
 	if (extTrigger1.process(inputs[CV_TRIG_INPUT].value)) {
-		info("Triggering File.Revert/reOpen with CV: +%dv", (int) inputs[CV_TRIG_INPUT].value);
-		// gRackWidget->revert();
+		info("Triggered with CV: +%dv", (int) inputs[CV_TRIG_INPUT].value);
+		// gRackWidget->revert(); // can't call outside main Rack thread!
+
+		// serialize "first" module and deserialize twice to test -- if that works,
+
+		// prototype layout via row-pivot
   }
 }
 
@@ -177,8 +201,8 @@ R4xH4xWidget::R4xH4xWidget(R4xH4x *module) : ModuleWidget(module) {
 
 	static const float led_offset = 3.3;
 	static const float led_center = 15;
-	static const float y_base = 75;
-	static const float y_offset = 100;
+	static const float y_base = 74;
+	static const float y_offset = 95; // 100;
 
 	// catalog, top button
 	addParam(ParamWidget::create<BigLEDBezel>(Vec(led_center, y_base), module, R4xH4x::MOMENTARY_SWITCH_1, 0.0, 1.0, 0.0));
