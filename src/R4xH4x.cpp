@@ -179,11 +179,7 @@ void R4xH4x::step() {
 	// h4x jack, whatever
 	if (extTrigger1.process(inputs[CV_TRIG_INPUT].value)) {
 		info("Triggered with CV: +%dv", (int) inputs[CV_TRIG_INPUT].value);
-		// gRackWidget->revert(); // can't call outside main Rack thread!
-
-		// serialize "first" module and deserialize twice to test -- if that works,
-
-		// prototype layout via row-pivot
+		this->patch();
   }
 }
 
@@ -216,6 +212,6 @@ R4xH4xWidget::R4xH4xWidget(R4xH4x *module) : ModuleWidget(module) {
 	addInput(Port::create<as_PJ301MPort>(Vec(box.size.x / 2 - 12, 350), Port::INPUT, module, R4xH4x::CV_TRIG_INPUT));
 }
 
-Model *modelR4xH4x = Model::create<R4xH4x, R4xH4xWidget>("DLwigglz", "DWLwigglz-r4xH4x", "r4xH4x", UTILITY_TAG);
+Model *modelR4xH4x = Model::create<R4xH4x, R4xH4xWidget>("DLwigglz", "DLwigglz-r4xH4x", "r4xH4x", UTILITY_TAG);
 
 // thanks for the boost, AS!!!
