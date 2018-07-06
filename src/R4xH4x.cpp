@@ -180,10 +180,16 @@ void R4xH4x::step() {
 	resetLight2 -= resetLight2 / lightLambda / engineGetSampleRate();
 	lights[MOMENTARY_LED_2].value = resetLight2;
 
-	// h4x jack, whatever
+	// h4x jack, 1-5v => patch, >5-10v => catalog + patch
 	if (extTrigger1.process(inputs[CV_TRIG_INPUT].value)) {
-		info("Triggered with CV: +%dv", (int) inputs[CV_TRIG_INPUT].value);
-		this->patch();
+		info("Triggered with CV: +%dv, commensing %s...",
+			(int) inputs[CV_TRIG_INPUT].value,
+			(int) inputs[CV_TRIG_INPUT].value > 5 ? "catalog + patch" : "patch");
+		if ((int) inputs[CV_TRIG_INPUT].value <= 5) this->patch();
+		else {
+			this->catalog();
+			this->patch();
+		}
   }
 }
 
