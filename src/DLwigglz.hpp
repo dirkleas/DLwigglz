@@ -11,6 +11,7 @@ using namespace rack;
 
 extern Plugin *plugin;
 extern Model *modelR4xH4x;
+extern Model *modelGl0bz;
 
 // MODULE COMPONENTS (thanks, AS!!!)
 struct BigLEDBezel : SVGSwitch, MomentarySwitch {
