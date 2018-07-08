@@ -59,6 +59,10 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 	info("Generating partial catalog for installed plugin models (missing module widths)");
 	json_t *metaj = json_object(); // meta as json, plugins as json, etc
 	json_t *psj = json_array();
+	json_t *allTagsJ = json_array();
+	for (std::string tag : gTagNames) {
+		if (!tag.empty()) json_array_append(allTagsJ, json_string(tag.c_str()));
+	}
 	json_object_set_new(metaj, "applicationName", json_string(gApplicationName.c_str()));
 	json_object_set_new(metaj, "applicationVersion", json_string(gApplicationVersion.c_str()));
 	json_object_set_new(metaj, "apiHost", json_string(gApiHost.c_str()));
@@ -69,6 +73,7 @@ void R4xH4x::catalog() { // serialize installed plugin(s)/modules(s) catalog as 
 	json_object_set_new(metaj, "height", json_integer(windowSize.y));
 	json_object_set_new(metaj, "token", json_string(gToken.c_str()));
 	json_object_set_new(metaj, "path", json_string(getcwd(NULL, 0)));
+	json_object_set_new(metaj, "tags", allTagsJ);
 	json_object_set_new(metaj, "pluginCount", json_integer(gPlugins.size()));
 	for (Plugin *plugin : gPlugins) {
 		json_t *pj = json_object();
